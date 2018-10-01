@@ -11,37 +11,40 @@ import caffe
 import PIL 
 from PIL import Image
 
-#¶ÁÈ¡Í¼ÏñÃûlist£¬ºÍÔ¤ÑµÁ·ºÃµÄÄ£ÐÍ
+
+caffe.set_device(7)
+caffe.set_mode_gpu()
+
+#è¯»å–å›¾åƒålistï¼Œå’Œé¢„è®­ç»ƒå¥½çš„æ¨¡åž‹
 IMAGE_TXT = '/data6/wanghao/pattern_recognition_project/list/test/list_test_label.txt'
 PREDICT_RESULT = '/data6/wanghao/pattern_recognition_project/list/predict/list_test_aug_2_predict.txt'
 
 MODEL_FILE = '/data6/wanghao/pattern_recognition_project/net/alexnet_deploy.prototxt'
 PRETRAINED = '/data6/wanghao/pattern_recognition_project/net/model_res/model_res_iter_160000.caffemodel';
 
-#µ÷È¡caffeµÄÍøÂç
+#è°ƒå–caffeçš„ç½‘ç»œ
 net = caffe.Net(MODEL_FILE,PRETRAINED,caffe.TEST)
-caffe.set_mode_gpu()  #ÉèÖÃcaffeµÄGPU¹¤×÷Ä£Ê½
 
-#½øÈëµÄÍ¼Æ¬´¦Àí´óÐ¡
+#è¿›å…¥çš„å›¾ç‰‡å¤„ç†å¤§å°
 image_width = 227
 image_height = 227
 
 f = open(IMAGE_TXT,'r')
 fsave = open(PREDICT_RESULT,'w')
 
-#±äÁ¿ÖÃ0
+#å˜é‡ç½®0
 count=0;
 diff_sum = 0;
 diff_softmax_sum = 0.0;
 num_right = 0.0;
 
-#´´½¨ËÍÈëÔ¤²âÍøÂçµÄdata labelÊý×é 
+#åˆ›å»ºé€å…¥é¢„æµ‹ç½‘ç»œçš„data labelæ•°ç»„ 
 data  = np.zeros((1,3,image_width,image_height),np.float32)
 label = np.zeros((1,1,1,1),np.float32)
 
 net.set_input_arrays(data,label)
 test = 0
-#¶ÔÃ¿¸öÍ¼Ïñ½øÐÐ´¦Àí
+#å¯¹æ¯ä¸ªå›¾åƒè¿›è¡Œå¤„ç†
 for line in f:
    count = count +1;
    idx1 = line.find('.jpg')
@@ -52,7 +55,7 @@ for line in f:
    
    FullName=fullName
   
-  #·Ö±ð»ñÈ¡Í¼ÏñRGBÈýÍ¨µÀµÄÐÅÏ¢
+  #åˆ†åˆ«èŽ·å–å›¾åƒRGBä¸‰é€šé“çš„ä¿¡æ¯
    img  = Image.open(FullName)
    img = img.resize((image_height,image_width),PIL.Image.ANTIALIAS)
    try:
@@ -67,7 +70,7 @@ for line in f:
 
    image_data = net.blobs['fc6'].data
 
-   #»ñÈ¡Éñ¾­ÍøÂçprob²ãµÄÊý¾Ý£¬Ã¿Ò»ÀàµÄ¸ÅÂÊ±ã¿ÉÒÔµÃ³ö
+   #èŽ·å–ç¥žç»ç½‘ç»œprobå±‚çš„æ•°æ®ï¼Œæ¯ä¸€ç±»çš„æ¦‚çŽ‡ä¾¿å¯ä»¥å¾—å‡º
    predict_gender_data = net.blobs['prob'].data
    gender_prob0 = predict_gender_data[0][0]
    gender_prob1 = predict_gender_data[0][1]
@@ -79,12 +82,12 @@ for line in f:
 
    c = [gender_prob0, gender_prob1, gender_prob2, gender_prob3, gender_prob4, gender_prob5, gender_prob6]
 
-   #È¡¸ÅÂÊ×î´óµÄÄÇÒ»Àà×÷ÎªÔ¤²âµÄÊä³ö
+   #å–æ¦‚çŽ‡æœ€å¤§çš„é‚£ä¸€ç±»ä½œä¸ºé¢„æµ‹çš„è¾“å‡º
    predict_label = c.index(max(c))
    predict_probability = c[predict_label]
    if(predict_label==0):
          test+=1
-   #´òÓ¡³öÔ¤²âÊý¾Ý
+   #æ‰“å°å‡ºé¢„æµ‹æ•°æ®
    if(predict_label == true_label):
       num_right = num_right + 1
       print('Real Gender label:%f,Predict Gender label:%f, Predict Probability:%f, Gender classify right!' % (true_label,predict_label,predict_probability))
@@ -93,7 +96,7 @@ for line in f:
       print('Real Gender label:%f,Predict Gender label:%f, Predict Probability:%f, Gender classify error!' % (true_label,predict_label,predict_probability))
       print >> fsave,'%d %d %f' % (true_label, predict_label, predict_probability)
 
-#¼ÆËã³ö×¼È·ÂÊ²¢Êä³ö
+#è®¡ç®—å‡ºå‡†ç¡®çŽ‡å¹¶è¾“å‡º
 Accuracy = num_right/count
 print test
 print('The accuracy of Gender Classification:  %f' % Accuracy)
